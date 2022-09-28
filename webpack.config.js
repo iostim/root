@@ -15,8 +15,12 @@ module.exports = (webpackConfigEnv, argv) => {
   });
 
   return merge(defaultConfig, {
-    // modify the webpack config however you'd like to by adding to this object
+    // entry (input) and output of the module
     entry: path.resolve(process.cwd(), `src/${projectName}`),
+    output: Object.assign({}, defaultConfig.output, {
+      filename: `${orgName}/${projectName}.js`,
+    }),
+    // EJS templating
     plugins: [
       new HtmlWebpackPlugin({
         inject: false,
@@ -27,5 +31,14 @@ module.exports = (webpackConfigEnv, argv) => {
         },
       }),
     ],
+    // /fhir proxy
+    devServer: {
+      proxy: {
+        "/fhir": {
+          target: process.env.FHIR_TARGET,
+          pathRewrite: { "^/fhir": process.env.FHIR_PATH },
+        },
+      },
+    },
   });
 };

@@ -2,6 +2,7 @@ const path = require("path");
 const { merge } = require("webpack-merge");
 const singleSpaDefaults = require("webpack-config-single-spa");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const proxyFHIR = require("webpack-proxy-fhir");
 
 module.exports = (webpackConfigEnv, argv) => {
   const orgName = "iostim";
@@ -13,6 +14,14 @@ module.exports = (webpackConfigEnv, argv) => {
     argv,
     disableHtmlGeneration: true,
   });
+
+  // Proxy
+  const proxy = {};
+
+  // FHIR proxy on /fhir
+  if (process.env.FHIR_PROXY_URL) {
+    Object.assign(proxy, proxyFHIR(process.env.FHIR_PROXY_URL));
+  }
 
   return merge(defaultConfig, {
     // entry (input) and output of the module
@@ -31,14 +40,8 @@ module.exports = (webpackConfigEnv, argv) => {
         },
       }),
     ],
-    // /fhir proxy
     devServer: {
-      proxy: {
-        "/fhir": {
-          target: process.env.FHIR_TARGET,
-          pathRewrite: { "^/fhir": process.env.FHIR_PATH },
-        },
-      },
+      proxy,
     },
   });
 };
